@@ -1,0 +1,6 @@
+@echo off
+echo Running pylint...
+pylint back-end-python/gameactions/app.py
+
+echo Running pytest with coverage...
+pytest back-end-python/tests/unit --cov-report=html --cov=gameactions --cov-branch
