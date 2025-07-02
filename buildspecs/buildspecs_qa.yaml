@@ -3,7 +3,7 @@ version: 0.2  # Versão do formato do ficheiro buildspec
 # Variáveis de ambiente que podem ser sobrescritas no projeto CodeBuild
 env:
   variables:
-    ENV: qua  # Pode ser 'dev', 'qa' ou 'prod'. Define o ambiente de destino do deploy.
+    ENV: qa  # Pode ser 'dev', 'qa' ou 'prod'. Define o ambiente de destino do deploy.
 
 phases:
   install:  # Fase de instalação – instala dependências do backend e dos testes
@@ -13,7 +13,8 @@ phases:
   build:  # Fase de testes e análise estática
     commands:
       - pylint --fail-under=8 back-end-python/gameactions/app.py  # Avaliação da qualidade do código
-      - pytest back-end-python/tests/unit \                        # Testes unitários com cobertura
+      # Testes unitários com cobertura
+      - pytest back-end-python/tests/unit \                        
           --junit-xml=unittests.xml \
           --cov-report=xml \
           --cov=gameactions \
@@ -23,11 +24,13 @@ phases:
       - echo Building SAM template...
       - sam build  # Compila as funções Lambda
       - echo Packaging SAM template...
-      - sam package \  # Prepara template com os artefactos para o S3
+      # Prepara template com os artefactos para o S3
+      - sam package \  
           --s3-bucket trivia-app-$ENV \
           --output-template-file packaged.yaml
       - echo Deploying to environment $ENV...
-      - sam deploy \  # Faz o deploy para a stack correspondente (trivia-app-dev, qa ou prod)
+      # Faz o deploy para a stack correspondente (trivia-app-dev, qa ou prod)
+      - sam deploy \  
           --template-file packaged.yaml \
           --stack-name trivia-app-$ENV \
           --capabilities CAPABILITY_IAM \
