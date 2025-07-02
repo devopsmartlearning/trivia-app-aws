@@ -9,17 +9,17 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
-      - echo "📦 Instalando dependências da aplicação e dos testes..."
+      - echo "📦 Installing application and test dependencies..."
       - pip install --upgrade pip
       - pip install -U -r back-end-python/gameactions/requirements.txt
       - pip install -U -r back-end-python/tests/requirements.txt
 
   build:
     commands:
-      - echo "🔍 Analisando código com pylint..."
+      - echo "🔍 Running code analysis with pylint..."
       - pylint --fail-under=8 back-end-python/gameactions/app.py
 
-      - echo "🧪 Executando testes unitários com cobertura..."
+      - echo "🧪 Running unit tests with coverage..."
       - |
         pytest back-end-python/tests/unit \
           --junit-xml=unittests.xml \
@@ -29,24 +29,14 @@ phases:
 
   post_build:
     commands:
-      - echo "📦 Construindo aplicação com SAM..."
+      - echo "📦 Building application with SAM..."
       - sam build --use-container
 
-      - echo "🚀 Empacotando aplicação para o ambiente $ENV..."
+      - echo "📦 Packaging application for environment $ENV..."
       - |
         sam package \
           --s3-bucket trivia-app-$ENV-bucket-teste \
           --output-template-file packaged.yaml
-
-      - echo "☁️ Fazendo deploy para o ambiente $ENV..."
-      - |
-        sam deploy \
-          --template-file packaged.yaml \
-          --stack-name trivia-app-$ENV \
-          --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-          --region eu-west-1 \
-          --no-confirm-changeset \
-          --no-fail-on-empty-changeset
 
 reports:
   UnitTests:
@@ -59,6 +49,4 @@ reports:
 
 artifacts:
   files:
-    - template.yaml
-    - packaged.yaml
-    - build/**/*
+    - packaged.yaml  # Este é o ficheiro que será usado na fase de deploy
