@@ -1,30 +1,55 @@
 version: 0.2  # Versão do formato do ficheiro buildspec
 
-# Variáveis de ambiente que podem ser sobrescritas no projeto CodeBuild
 env:
   variables:
-    ENV: qa  # Pode ser 'dev', 'qa' ou 'prod'. Define o ambiente de destino do deploy.
+    ENV: dev  # Pode ser 'dev', 'qa' ou 'prod'. Define o ambiente de destino do deploy
 
 phases:
-  install:  # Fase de instalação – instala dependências do backend e dos testes
+  install:
+    runtime-versions:
+      python: 3.8  # Isto ativa o pyenv do CodeBuild para Python 3.8
     commands:
-      - pip3 install -U -r back-end-python/gameactions/requirements.txt  # Dependências da aplicação
-      - pip3 install -U -r back-end-python/tests/requirements.txt        # Dependências dos testes
-  build:  # Fase de testes e análise estática
-    commands: # Avaliação da qualidade do código # Testes unitários com cobertura
-      - pylint --fail-under=8 back-end-python/gameactions/app.py  
-      - pytest back-end-python/tests/unit  --junit-xml=unittests.xml --cov-report=xml --cov=gameactions --cov-branch
-  post_build:  # Fase de build e deployment do SAM
+      - echo "🔧 Instalando Python 3.9 manualmente..."
+      - yum install -y gcc make zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel wget tar
+      - wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
+      - tar xzf Python-3.9.19.tgz
+      - cd Python-3.9.19
+      - ./configure --enable-optimizations
+      - make altinstall
+      - ln -sf /usr/local/bin/python3.9 /usr/bin/python3.9
+      - ln -sf /usr/local/bin/pip3.9 /usr/bin/pip3.9
+      - python3.9 --version
+      - pip3.9 --version
+
+      - echo "📦 Instalando dependências da aplicação e dos testes..."
+      - pip3.9 install --upgrade pip
+      - pip3.9 install -U -r back-end-python/gameactions/requirements.txt
+      - pip3.9 install -U -r back-end-python/tests/requirements.txt
+
+  build:
     commands:
-      - echo Building SAM template...
-      - sam build  # Compila as funções Lambda
-      - echo Packaging SAM template... # Prepara template com os artefactos para o S3
-      - sam package \  
+      - echo "🔍 Analisando código com pylint..."
+      - python3.9 -m pylint --fail-under=8 back-end-python/gameactions/app.py
+
+      - echo "🧪 Executando testes unitários com cobertura..."
+      - python3.9 -m pytest back-end-python/tests/unit \
+          --junit-xml=unittests.xml \
+          --cov-report=xml \
+          --cov=gameactions \
+          --cov-branch
+
+  post_build:
+    commands:
+      - echo "📦 Construindo aplicação com SAM..."
+      - sam build --use-container
+
+      - echo "🚀 Empacotando aplicação para o ambiente $ENV..."
+      - sam package \
           --s3-bucket trivia-app-$ENV \
           --output-template-file packaged.yaml
-      - echo Deploying to environment $ENV...
-      # Faz o deploy para a stack correspondente (trivia-app-dev, qa ou prod)
-      - sam deploy \  
+
+      - echo "☁️ Fazendo deploy para o ambiente $ENV..."
+      - sam deploy \
           --template-file packaged.yaml \
           --stack-name trivia-app-$ENV \
           --capabilities CAPABILITY_IAM \
@@ -32,7 +57,6 @@ phases:
           --no-confirm-changeset \
           --no-fail-on-empty-changeset
 
-# Definição de relatórios de testes e cobertura
 reports:
   UnitTests:
     files:
@@ -42,7 +66,6 @@ reports:
       - 'coverage.xml'
     file-format: COBERTURAXML
 
-# Artefactos que serão guardados pelo CodeBuild (útil para consulta ou exportação)
 artifacts:
   files:
     - template.yaml
