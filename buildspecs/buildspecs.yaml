@@ -1,13 +1,13 @@
-version: 0.2  # Versão do formato do ficheiro buildspec
+version: 0.2
 
 env:
   variables:
-    ENV: dev  # Pode ser 'dev', 'qa' ou 'prod'. Define o ambiente de destino do deploy
+    ENV: dev
 
 phases:
   install:
     runtime-versions:
-      python: 3.9  # Usa Python 3.9 diretamente da imagem CodeBuild
+      python: 3.9
     commands:
       - echo "📦 Instalando dependências da aplicação e dos testes..."
       - pip install --upgrade pip
@@ -20,7 +20,8 @@ phases:
       - pylint --fail-under=8 back-end-python/gameactions/app.py
 
       - echo "🧪 Executando testes unitários com cobertura..."
-      - pytest back-end-python/tests/unit \
+      - |
+        pytest back-end-python/tests/unit \
           --junit-xml=unittests.xml \
           --cov-report=xml \
           --cov=gameactions \
@@ -32,12 +33,14 @@ phases:
       - sam build --use-container
 
       - echo "🚀 Empacotando aplicação para o ambiente $ENV..."
-      - sam package \
-          --s3-bucket trivia-app-$ENV \
+      - |
+        sam package \
+          --s3-bucket trivia-app-$ENV-bucket-teste \
           --output-template-file packaged.yaml
 
       - echo "☁️ Fazendo deploy para o ambiente $ENV..."
-      - sam deploy \
+      - |
+        sam deploy \
           --template-file packaged.yaml \
           --stack-name trivia-app-$ENV \
           --capabilities CAPABILITY_IAM \
