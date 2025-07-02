@@ -35,7 +35,7 @@ phases:
       - echo "🚀 Empacotando aplicação para o ambiente $ENV..."
       - |
         sam package \
-          --s3-bucket trivia-app-$ENV-bucket-teste \
+          --s3-bucket trivia-app-$ENV-bucket \
           --output-template-file packaged.yaml
 
       - echo "☁️ Fazendo deploy para o ambiente $ENV..."
