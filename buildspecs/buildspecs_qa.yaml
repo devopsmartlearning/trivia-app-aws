@@ -11,9 +11,8 @@ phases:
       - pip3 install -U -r back-end-python/gameactions/requirements.txt  # Dependências da aplicação
       - pip3 install -U -r back-end-python/tests/requirements.txt        # Dependências dos testes
   build:  # Fase de testes e análise estática
-    commands:
-      - pylint --fail-under=8 back-end-python/gameactions/app.py  # Avaliação da qualidade do código
-      # Testes unitários com cobertura
+    commands: # Avaliação da qualidade do código # Testes unitários com cobertura
+      - pylint --fail-under=8 back-end-python/gameactions/app.py  
       - pytest back-end-python/tests/unit \                        
           --junit-xml=unittests.xml \
           --cov-report=xml \
@@ -23,8 +22,7 @@ phases:
     commands:
       - echo Building SAM template...
       - sam build  # Compila as funções Lambda
-      - echo Packaging SAM template...
-      # Prepara template com os artefactos para o S3
+      - echo Packaging SAM template... # Prepara template com os artefactos para o S3
       - sam package \  
           --s3-bucket trivia-app-$ENV \
           --output-template-file packaged.yaml
