@@ -57,7 +57,7 @@ reports:
       - 'coverage.xml'
     file-format: COBERTURAXML
 
-artifacts:
+artifacts: 
   files:
     - template.yaml
     - packaged.yaml
